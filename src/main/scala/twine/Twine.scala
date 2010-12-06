@@ -43,7 +43,7 @@ package dispatch {
           // the only parameter was "reset"; ignore the token and delete the data store
           case (Array("reset"), _) => conf.delete(); "OAuth credentials deleted."
           // there are no parameters, but we have a token! Go into `cat`, forever.
-          case (Array(), Some(tok)) => cat(tok, None)
+          case (Array(), Some(tok)) => cat(tok)
           // there are some parameters and a token, combine parameters and...
           case (args, Some(tok)) => (args mkString " ") match {
             // dang tweet is too long
@@ -62,26 +62,17 @@ package dispatch {
           case _ => get_authorization(args)
         })
       }
-      // this `cat` infinitely tail-recurses, MEOW
-      def cat(tok: Token, last_id: Option[BigDecimal]) {
+      def cat(token: Token) {
         // get us some tweets
-        val tweets = http(
-          // so...... FOLD LEFT. `(a /: b)` Since b is an Option, we end up either
-          // with the starting value `a` or a single application of the given function
-          // to it, `a.since_id(b)` which adds that parameter to the request.
-          (Status.friends_timeline(consumer, tok) /: last_id) { _ since_id _ }
-        )
-        // print Twitter in chronological order (HERESY)
-        tweets.reverse foreach { js =>
-          // the tweets were JSON btw
-          val Status.user.screen_name(screen_name) = js
-          val Status.text(text) = js
-          println("%-15s%s" format (screen_name, Status.rebracket(text)) )
-        }
-        // nap time!
-        Thread sleep 60000
-        // use the latest status id if there was one, otherwise the last one
-        cat(tok, tweets.headOption map { Status.id(_) } orElse last_id)
+        http(UserStream.open(consumer, token, None) { friends => 
+          { message =>
+            // print Twitter in chronological order (HERESY)
+            println(message)
+  /*        val Status.user.screen_name(screen_name) = js
+            val Status.text(text) = js
+            println("%-15s%s" format (screen_name, Status.rebracket(text)) ) */
+          }
+        })
       }
       // oauth sesame
       def get_authorization(args: Array[String]) = {
@@ -134,6 +125,7 @@ package dispatch {
             conf_writer write (
             """ |<log>
                 |  level = "WARNING"
+                |  console = true
                 |</log>
                 |<%s>
                 |  oauth_token = "%s"
