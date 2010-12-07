@@ -15,8 +15,12 @@ with simple-build-tool[2].
 
 And you're streaming. (Tell your friends to tweet something, maybe.) There is not a 
 graceful way to exit currently (forks welcome), so just ctrl+c to blow out of 
-twine and sbt if you're done. You can also pass in a tweet to post it.
+twine and sbt if you're done.
 
-The End.
+You can also pass in a tweet to post it.
+
+   > run "Hey u guys I finally fixed up Dispatch's Twine example: https://github.com/n8han/dispatch-twine"
+
+Not The End.
 
 [2]: http://code.google.com/p/simple-build-tool/

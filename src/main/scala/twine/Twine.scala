@@ -70,12 +70,12 @@ package dispatch {
 
           // the friends message should be the first one to come in
           for (JArray(friends) <- message \ "friends") yield
-            println("Connected to stream! Tweets will appear as they arrive.")
+            println("Streaming tweets as they arrive...")
 
           // print apparent tweet if it has text and a screen_name
           for {
             JString(text) <- message \ "text"
-            JString(name) <- message \ "screen_name"
+            JString(name) <- message \ "user" \ "screen_name"
           } yield
             println("%-15s%s" format (name, text) )
         })
