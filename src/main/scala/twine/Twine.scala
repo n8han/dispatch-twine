@@ -64,14 +64,20 @@ package dispatch {
       }
       def cat(token: Token) {
         // get us some tweets
-        http(UserStream.open(consumer, token, None) { friends => 
-          { message =>
-            // print Twitter in chronological order (HERESY)
-            println(message)
-  /*        val Status.user.screen_name(screen_name) = js
-            val Status.text(text) = js
-            println("%-15s%s" format (screen_name, Status.rebracket(text)) ) */
-          }
+        http(UserStream.open(consumer, token, None) { message => 
+          import net.liftweb.json.JsonAST._
+          // this listener is called each time a json message arrives
+
+          // the friends message should be the first one to come in
+          for (JArray(friends) <- message \ "friends") yield
+            println("Connected to stream! Tweets will appear as they arrive.")
+
+          // print apparent tweet if it has text and a screen_name
+          for {
+            JString(text) <- message \ "text"
+            JString(name) <- message \ "screen_name"
+          } yield
+            println("%-15s%s" format (name, text) )
         })
       }
       // oauth sesame
