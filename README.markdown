@@ -19,7 +19,7 @@ twine and sbt if you're done.
 
 You can also pass in a tweet to post it.
 
-   > run "Hey u guys I finally fixed up Dispatch's Twine example: https://github.com/n8han/dispatch-twine"
+    > run "Hey u guys I finally fixed up Dispatch's Twine example: https://github.com/n8han/dispatch-twine"
 
 Not The End.
 
