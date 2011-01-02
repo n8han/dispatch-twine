@@ -21,6 +21,6 @@ You can also pass in a tweet to post it.
 
     > run "Hey u guys I finally fixed up Dispatch's Twine example: https://github.com/n8han/dispatch-twine"
 
-Not The End.
+Note: Add "-Dfile.encoding=UTF-8" to your sbt start script if you want non-ASCII characters to render correctly.
 
 [2]: http://code.google.com/p/simple-build-tool/
