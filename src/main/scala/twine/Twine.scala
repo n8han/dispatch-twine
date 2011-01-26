@@ -17,14 +17,14 @@ package dispatch {
       // import and nickname Configgy's main access object
       import _root_.net.lag.configgy.{Configgy => C}
       // import all the methods, including implicit conversions, defined on dispatch.Http
-      import Http._
+      import Request._
 
       // this will be our datastore
       val conf = new java.io.File(System.getProperty("user.home"), ".twine.conf")
       // OAuth application key, top-secret
       val consumer = Consumer("lrhF8SXnl5q3gFOmzku4Gw", "PbB4Mr8pKAChWmd6AocY6gLmAKzPKaszYnXyIDQhzE")
-      // one single-threaded http access point, please!
-      val http = new Http
+      // one nio http access point, please!
+      val http = new nio.Http
 
       // ---BY YOUR COMMAND---
       def main(args: Array[String]) {
@@ -79,6 +79,7 @@ package dispatch {
           } yield
             println("%-15s%s" format (name, text) )
         })
+        Thread.sleep(Int.MaxValue) // very graceful
       }
       // oauth sesame
       def get_authorization(args: Array[String]) = {
@@ -87,7 +88,7 @@ package dispatch {
           // one parameter that must be the verifier, and there's a request token
           case (Array(verifier), Some(tok)) => try {
             // exchange it for an access token
-            http(Auth.access_token(consumer, tok, verifier)) match {
+            http(Auth.access_token(consumer, tok, verifier))() match {
               case (access_tok, _, screen_name) =>
                 // nb: we're producing a message, a token type name, and the token itself
                 ("Approved! It's tweetin' time, %s." format screen_name, Some(("access", access_tok)))
@@ -100,7 +101,7 @@ package dispatch {
           // there wasn't a parameter so who cares if we have a request token, just get a new one
           case _ => 
             // a request token for the Twine application, kthxbai
-            val tok = http(Auth.request_token(consumer))
+            val tok = http(Auth.request_token(consumer))()
             // generate the url the user needs to go to, to grant us access
             val auth_uri = Auth.authorize_url(tok).to_uri
             (( try {

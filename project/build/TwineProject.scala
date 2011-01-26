@@ -3,5 +3,7 @@ import Process._
 
 class TwineProject(info: ProjectInfo) extends DefaultProject(info) {
   val configgy = "net.lag" % "configgy" % "2.0.0" intransitive()
-  val dispatch = "net.databinder" %% "dispatch-twitter" % "0.7.8"
+  val dvers = "0.8.0.Beta3-SNAPSHOT"
+  val twitter = "net.databinder" %% "dispatch-twitter" % dvers
+  val http = "net.databinder" %% "dispatch-nio" % dvers
 }
