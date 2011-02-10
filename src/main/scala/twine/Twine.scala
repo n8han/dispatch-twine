@@ -61,16 +61,17 @@ package dispatch {
           // there was no access token, we must still be in the oauthorization process
           case _ => get_authorization(args)
         })
+        http.shutdown()
       }
-      def cat(token: Token) {
+      def cat(token: Token) = {
         // get us some tweets
-        http(UserStream.open(consumer, token, None) { message => 
+        val fut = http(UserStream.open(consumer, token, None) { message => 
           import net.liftweb.json.JsonAST._
           // this listener is called each time a json message arrives
 
           // the friends message should be the first one to come in
-          for (JArray(friends) <- message \ "friends") yield
-            print("Streaming tweets as they arrive...")
+          for (JArray(friends) <- message \ "friends")
+            print("Streaming tweets as they arrive, press [↵ Enter] to stop...")
 
           // print apparent tweet if it has text and a screen_name
           for {
@@ -79,7 +80,11 @@ package dispatch {
           } yield
             print("\n%-15s%s" format (name, text) )
         })
-        Thread.sleep(Int.MaxValue) // very graceful
+        // wait here until the user pushes some buttons
+        while (System.in.available <= 0)
+          Thread.sleep(1000)
+        fut.stop()
+        "Okay!"
       }
       // oauth sesame
       def get_authorization(args: Array[String]) = {
