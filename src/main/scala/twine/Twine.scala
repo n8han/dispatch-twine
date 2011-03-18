@@ -79,9 +79,11 @@ package dispatch {
             JString(name) <- message \ "user" \ "screen_name"
           } yield
             print("\n%-15s%s" format (name, text) )
+        } ^! { 
+          case exc => System.err.println("Connection error: " + exc.getMessage)
         })
         // wait here until the user pushes some buttons
-        while (System.in.available <= 0)
+        while (System.in.available <= 0 && !fut.isSet)
           Thread.sleep(1000)
         fut.stop()
         "Okay!"
