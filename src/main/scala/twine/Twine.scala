@@ -56,7 +56,7 @@ package dispatch {
               val Status.id(id) = js
               // this goes back to our user
               "Posted: " + (Twitter.host / screen_name / "status" / id.toString to_uri)
-            })
+            })()
           }
           // there was no access token, we must still be in the oauthorization process
           case _ => get_authorization(args)
