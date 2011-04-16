@@ -1,8 +1,10 @@
 Dispatch Twine
 ==============
 
-This is a sample application for Databinder Dispatch[1], to build and run
-with simple-build-tool[2].
+This is a sample application for [Dispatch][1], to build and run
+with [simple-build-tool][2].
+
+[1]: http://dispatch.databinder.net/
 
     $ sbt
     ...
