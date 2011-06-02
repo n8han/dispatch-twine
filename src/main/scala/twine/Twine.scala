@@ -14,7 +14,6 @@ package dispatch {
   package twine {
     // this singleton object is the application
     object Twine {
-      // import and nickname Configgy's main access object
       import _root_.net.lag.configgy.{Configgy => C}
       // import all the methods, including implicit conversions, defined on dispatch.Http
       import Request._
