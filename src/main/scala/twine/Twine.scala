@@ -26,7 +26,7 @@ package dispatch {
       // OAuth application key, top-secret
       val consumer = Consumer("lrhF8SXnl5q3gFOmzku4Gw", "PbB4Mr8pKAChWmd6AocY6gLmAKzPKaszYnXyIDQhzE")
       // one nio http access point, please!
-      val http = new nio.Http
+      val http = new nio.Http with NoLogging
 
       // ---BY YOUR COMMAND---
       def main(args: Array[String]) {
