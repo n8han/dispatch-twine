@@ -7,3 +7,5 @@ libraryDependencies ++= Seq(
    * the Dispatch tuturials to keep it here for now. */
   "net.databinder" %% "dispatch-http" % "0.8.3"
 )
+
+initialCommands := "import dispatch._"
