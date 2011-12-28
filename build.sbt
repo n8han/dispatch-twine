@@ -1,5 +1,5 @@
 libraryDependencies ~= { seq =>
-  val vers = "0.8.6"
+  val vers = "0.8.7"
   seq ++ Seq(
     "net.databinder" %% "dispatch-core" % vers,
     "net.databinder" %% "dispatch-oauth" % vers,
