@@ -7,7 +7,8 @@ libraryDependencies ~= { seq =>
     /* Twine doesn't need the below dependencies, but it simplifies
      * the Dispatch tutorials to keep it here for now. */
     "net.databinder" %% "dispatch-http" % vers,
-    "net.databinder" %% "dispatch-tagsoup"% vers
+    "net.databinder" %% "dispatch-tagsoup" % vers,
+    "net.databinder" %% "dispatch-jsoup" % vers
   )
 }
 
