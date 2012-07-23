@@ -8,35 +8,49 @@ package dispatch.twine
 
 import dispatch._
 
+import net.liftweb.json.JsonAST._
+
 package as {
-  val LiftJson = dispatch.as.string.andThen(net.liftweb.json.JsonParser.parse)
+  import net.liftweb.json.JsonParser.parse
+  val JValue = dispatch.as.string.andThen(parse)
+  package stream {
+    object JValue {
+      def apply[U](f: JValue => U) =
+        new stream.StringsByLine[Unit] {
+          def onStringBy(string: String) {
+            f(parse(string))
+          }
+          def onCompleted = ()
+        }
+    }
+  }
 }
-class Auth(val callback: String) extends oauth.Exchange
-  with oauth.SomeCallback 
-  with oauth.SomeHttp
-  with oauth.SomeConsumer
-  with TwitterEndpoints {
-  val http = Twine.http
-  // use pin-based, out-of-band authentication
-  val callback = "oob"
-  // OAuth application key, top-secret
-  val consumer = Consumer("lrhF8SXnl5q3gFOmzku4Gw",
-                          "PbB4Mr8pKAChWmd6AocY6gLmAKzPKaszYnXyIDQhzE")
-}
-object OobAuth extends Auth
 trait TwitterEndpoints extends oauth.SomeEndpoints {
   val requestToken = "http://api.twitter.com/oauth/request_token"
   val accessToken  = "http://api.twitter.com/oauth/access_token"
   val authorize    = "http://api.twitter.com/oauth/authorize"
 }
+trait TwitterAuth extends oauth.Exchange
+  with oauth.SomeCallback 
+  with oauth.SomeHttp
+  with oauth.SomeConsumer
+  with TwitterEndpoints
+object Auth extends TwitterAuth {
+  val http = Twine.http
+  // use pin-based, out-of-band authentication
+  val callback = "oob"
+  // OAuth application key, top-secret
+  val consumer = new com.ning.http.client.oauth.ConsumerKey(
+    "lrhF8SXnl5q3gFOmzku4Gw",
+    "PbB4Mr8pKAChWmd6AocY6gLmAKzPKaszYnXyIDQhzE"
+  )
+}
 
 // this singleton object is the application
 object Twine {
-  // import all the methods, including implicit conversions, defined on dispatch.Http
-  import Request._
-
   // this will be our datastore
-  val conf = new java.io.File(System.getProperty("user.home"), ".twine.properties")
+  val conf = new java.io.File(System.getProperty("user.home"),
+                              ".twine.properties")
   val props = new java.util.Properties
   def token_type = props.get("token_type")
   def token = Token(props)
@@ -65,15 +79,20 @@ object Twine {
       case (args, "access", Some(tok)) => (args mkString " ") match {
         // dang tweet is too long
         case tweet if tweet.length > 140 => 
-          "%d characters? This is Twitter not NY Times Magazine." format tweet.length
+          "%d characters? This is Twitter not NY Times Magazine.".format(
+            tweet.length
+          )
         // it looks like an okay tweet, let us post it:
-        case tweet => http(Status.update(tweet, consumer, tok) ># { js =>
-          // handling the Status.update response as JSON, we take what we want
-          val Status.user.screen_name(screen_name) = js
-          val Status.id(id) = js
-          // this goes back to our user
-          "Posted: " + (Twitter.host / screen_name / "status" / id.toString to_uri)
-        })()
+/*        case tweet =
+          val update = http(Status.update(tweet, consumer, tok) as.JValue)
+          for (js <- update) yield {
+              // extract what we want from the json
+              val Status.user.screen_name(screen_name) = js
+              val Status.id(id) = js
+              // this goes back to our user
+              "Posted: " + (Twitter.host / screen_name / "status" / 
+                            id.toString to_uri)
+        })()*/
       }
       // there was no access token, we must still be in the oauthorization process
       case _ => get_authorization(args)
@@ -82,27 +101,26 @@ object Twine {
   }
   def cat(token: Token) = {
     // get us some tweets
-    val fut = http(UserStream.open(consumer, token, None) { message => 
-      import net.liftweb.json.JsonAST._
-      // this listener is called each time a json message arrives
+    val stream = http(url("https://userstream.twitter.com/2/user.json") <@
+      (Auth.consumer, token) OK as.stream.json { message =>
+        // this listener is called each time a json message arrives
 
-      // the friends message should be the first one to come in
-      for (JArray(friends) <- message \ "friends")
-        print("Streaming tweets as they arrive, press [↵ Enter] to stop...")
+        // the friends message should be the first one to come in
+        for (JArray(friends) <- message \ "friends")
+          print("Streaming tweets as they arrive, press [↵ Enter] to stop...")
 
-      // print apparent tweet if it has text and a screen_name
-      for {
-        JString(text) <- message \ "text"
-        JString(name) <- message \ "user" \ "screen_name"
-      } yield
-        print("\n%-15s%s" format (name, text) )
-    } ^! { 
-      case exc => System.err.println("Connection error: " + exc.getMessage)
-    })
+        // print apparent tweet if it has text and a screen_name
+        for {
+          JString(text) <- message \ "text"
+          JString(name) <- message \ "user" \ "screen_name"
+        } yield
+          print("\n%-15s%s" format (name, text) )
+      }
+    )
     // wait here until the user pushes some buttons
-    while (System.in.available <= 0 && !fut.isSet)
+    while (System.in.available <= 0 && !stream.isComplete)
       Thread.sleep(1000)
-    fut.stop()
+    stream.abort()
     "Okay!"
   }
   // oauth sesame
